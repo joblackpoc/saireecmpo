@@ -1,0 +1,49 @@
+# SecureCMS Security Policy
+# Last Updated: {% now "Y-m-d" %}
+
+Contact: security@securecms.example.com
+Expires: {% now "Y-12-31" %}T23:59:59.000Z
+Encryption: https://securecms.example.com/pgp-key.txt
+Acknowledgments: https://securecms.example.com/security/acknowledgments
+Preferred-Languages: en
+Canonical: https://securecms.example.com/.well-known/security.txt
+Policy: https://securecms.example.com/security/policy
+
+# Security Features
+# - Multi-Factor Authentication (MFA/2FA) with TOTP
+# - Content sanitization with bleach library
+# - Argon2 password hashing (OWASP recommended)
+# - Comprehensive audit logging
+# - Rate limiting and brute force protection
+# - CSRF protection on all forms
+# - XSS protection via auto-escaping
+# - SQL injection prevention via ORM
+# - Secure session management
+# - HTTPS enforcement in production
+
+# Reporting Security Issues
+# Please report security vulnerabilities to security@securecms.example.com
+# We aim to respond within 48 hours
+# Please provide:
+# - Description of the vulnerability
+# - Steps to reproduce
+# - Potential impact
+# - Suggested mitigation (if any)
+
+# Bug Bounty Program
+# We currently do not offer a bug bounty program
+# However, we deeply appreciate responsible disclosure
+# and will acknowledge researchers who report valid issues
+
+# Security Headers in Use
+# - Content-Security-Policy
+# - X-Content-Type-Options: nosniff
+# - X-Frame-Options: DENY
+# - X-XSS-Protection: 1; mode=block
+# - Strict-Transport-Security (HSTS)
+# - Referrer-Policy: strict-origin-when-cross-origin
+
+# Compliance
+# - OWASP Top 10 2021 addressed
+# - NIST SP 800-53 controls implemented
+# - GDPR compliance features included

@@ -1,0 +1,50 @@
+# Robots.txt for SecureCMS
+# Last Updated: {% now "Y-m-d" %}
+
+# Allow all bots to crawl public content
+User-agent: *
+Allow: /
+Allow: /cms/
+Allow: /api/v1/
+
+# Disallow administrative and private areas
+Disallow: /admin/
+Disallow: /accounts/
+Disallow: /auth/
+Disallow: /api/v1/auth/
+Disallow: /api/v1/profile/
+Disallow: /api/v1/pages/my/
+Disallow: /static/admin/
+Disallow: /media/private/
+
+# Disallow temporary and system files
+Disallow: /*.json$
+Disallow: /*.xml$
+Disallow: /temp/
+Disallow: /tmp/
+Disallow: /.git/
+Disallow: /.env
+Disallow: /backup/
+
+# Specific bot rules
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+# Crawl delay for respectful crawling
+User-agent: *
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://securecms.example.com/sitemap.xml

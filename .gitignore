@@ -1,0 +1,32 @@
+# Virtual environment folder
+venv/
+env/
+.env.example
+# IDE files
+.idea/
+.vscode/
+
+# Django-specific files and folders
+*.pyc
+__pycache__/
+*.log
+db.sqlite3
+/static/
+/media/
+
+# Python-specific files
+.Python
+*.egg-info/
+dist/
+build/
+pip-selfcheck.json
+
+# Local settings and secrets
+# It is a common practice to keep sensitive data like API keys
+# or database passwords in a separate file not tracked by Git.
+# You can uncomment the line below if you follow this practice.
+# myproject/local_settings.py
+
+# Operating System files
+.DS_Store
+Thumbs.db

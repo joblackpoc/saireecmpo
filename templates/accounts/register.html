@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Register - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2><i class="bi bi-person-plus-fill"></i> Create Account</h2>
+            <span class="security-badge">Secure Registration</span>
+            <p class="text-muted mt-2">Join SecureCMS with enhanced security features</p>
+        </div>
+
+        <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <!-- Email Field -->
+            <div class="mb-3">
+                <label for="{{ form.email.id_for_label }}" class="form-label">
+                    <i class="bi bi-envelope-fill"></i> Email Address <span class="text-danger">*</span>
+                </label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.email.errors.0 }}
+                    </div>
+                {% endif %}
+                <div class="form-text">
+                    We'll send a verification link to this address
+                </div>
+            </div>
+
+            <!-- First Name -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                        <i class="bi bi-person"></i> First Name
+                    </label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.first_name.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Last Name -->
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                        <i class="bi bi-person"></i> Last Name
+                    </label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.last_name.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Password Field -->
+            <div class="mb-3">
+                <label for="{{ form.password1.id_for_label }}" class="form-label">
+                    <i class="bi bi-lock-fill"></i> Password <span class="text-danger">*</span>
+                </label>
+                <div class="input-group">
+                    {{ form.password1 }}
+                    <button class="btn btn-outline-secondary password-toggle" type="button" data-target="{{ form.password1.id_for_label }}">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                {% if form.password1.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.password1.errors.0 }}
+                    </div>
+                {% endif %}
+                
+                <!-- Password Strength Indicator -->
+                <div id="password-strength-indicator" class="password-strength">
+                    <div class="password-strength-bar">
+                        <div class="password-strength-fill"></div>
+                    </div>
+                    <ul class="password-requirements list-unstyled small">
+                        <li data-requirement="length">At least 12 characters</li>
+                        <li data-requirement="lowercase">Contains lowercase letter</li>
+                        <li data-requirement="uppercase">Contains uppercase letter</li>
+                        <li data-requirement="numbers">Contains number</li>
+                        <li data-requirement="special">Contains special character</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="mb-3">
+                <label for="{{ form.password2.id_for_label }}" class="form-label">
+                    <i class="bi bi-lock-fill"></i> Confirm Password <span class="text-danger">*</span>
+                </label>
+                <div class="input-group">
+                    {{ form.password2 }}
+                    <button class="btn btn-outline-secondary password-toggle" type="button" data-target="{{ form.password2.id_for_label }}">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                {% if form.password2.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.password2.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Honeypot Field (Hidden) -->
+            <div class="honey-pot">
+                {{ form.username }}
+            </div>
+
+            <!-- Terms Acceptance -->
+            <div class="mb-3">
+                <div class="form-check">
+                    {{ form.accept_terms }}
+                    <label class="form-check-label" for="{{ form.accept_terms.id_for_label }}">
+                        I accept the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms of Service</a> 
+                        and <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a>
+                        <span class="text-danger">*</span>
+                    </label>
+                    {% if form.accept_terms.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.accept_terms.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- GDPR Consent -->
+            <div class="mb-3">
+                <div class="form-check">
+                    {{ form.data_privacy_consent }}
+                    <label class="form-check-label" for="{{ form.data_privacy_consent.id_for_label }}">
+                        I consent to the processing of my personal data as described in the Privacy Policy
+                        <span class="text-danger">*</span>
+                    </label>
+                    {% if form.data_privacy_consent.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.data_privacy_consent.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- CAPTCHA -->
+            <div class="captcha-container">
+                {{ form.captcha }}
+                {% if form.captcha.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.captcha.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                <i class="bi bi-person-plus"></i> Create Account
+            </button>
+
+            <!-- Security Features Notice -->
+            <div class="alert alert-security small">
+                <h6 class="alert-heading"><i class="bi bi-shield-check"></i> Security Features</h6>
+                <ul class="mb-0">
+                    <li>Email verification required</li>
+                    <li>Strong password enforcement (12+ characters)</li>
+                    <li>Optional two-factor authentication</li>
+                    <li>Secure session management</li>
+                </ul>
+            </div>
+
+            <!-- Login Link -->
+            <div class="text-center">
+                <p>Already have an account? <a href="{% url 'two_factor:login' %}">Login here</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Terms Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Terms of Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Acceptance of Terms</h6>
+                <p>By accessing and using SecureCMS, you agree to be bound by these Terms of Service.</p>
+                
+                <h6>2. User Responsibilities</h6>
+                <p>You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account.</p>
+                
+                <h6>3. Security</h6>
+                <p>We implement industry-standard security measures, but you acknowledge that no system is completely secure.</p>
+                
+                <h6>4. Content</h6>
+                <p>You retain ownership of content you create, but grant us license to display it through our service.</p>
+                
+                <h6>5. Privacy</h6>
+                <p>Your use of our service is also governed by our Privacy Policy.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Privacy Modal -->
+<div class="modal fade" id="privacyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Privacy Policy</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Information We Collect</h6>
+                <p>We collect information you provide directly, such as your email address and profile information.</p>
+                
+                <h6>How We Use Information</h6>
+                <p>We use the information to provide, maintain, and improve our services.</p>
+                
+                <h6>Data Security</h6>
+                <p>We implement appropriate security measures to protect your personal information.</p>
+                
+                <h6>Your Rights</h6>
+                <p>You have the right to access, update, or delete your personal information.</p>
+                
+                <h6>Contact Us</h6>
+                <p>For privacy concerns, contact us at privacy@securecms.example.com</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/main.js' %}"></script>
+{% endblock %}

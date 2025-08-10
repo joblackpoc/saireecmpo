@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Login - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2><i class="bi bi-box-arrow-in-right"></i> Secure Login</h2>
+            <span class="security-badge">2FA Enabled</span>
+            <p class="text-muted mt-2">Sign in to your SecureCMS account</p>
+        </div>
+
+        <!-- This template works with django-two-factor-auth -->
+        {% if wizard.steps.current == 'auth' %}
+            <!-- Step 1: Username/Password -->
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                {{ wizard.management_form }}
+                
+                {% if wizard.form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        {{ wizard.form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                {% if request.session.failed_login_attempts >= 3 %}
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-shield-exclamation"></i>
+                        Multiple failed login attempts detected. Please complete the CAPTCHA.
+                    </div>
+                {% endif %}
+
+                <!-- Email Field -->
+                <div class="mb-3">
+                    <label for="{{ wizard.form.username.id_for_label }}" class="form-label">
+                        <i class="bi bi-envelope-fill"></i> Email Address
+                    </label>
+                    {{ wizard.form.username }}
+                    {% if wizard.form.username.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ wizard.form.username.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Password Field -->
+                <div class="mb-3">
+                    <label for="{{ wizard.form.password.id_for_label }}" class="form-label">
+                        <i class="bi bi-lock-fill"></i> Password
+                    </label>
+                    <div class="input-group">
+                        {{ wizard.form.password }}
+                        <button class="btn btn-outline-secondary password-toggle" type="button" data-target="{{ wizard.form.password.id_for_label }}">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    {% if wizard.form.password.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ wizard.form.password.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Remember Me -->
+                {% if wizard.form.remember_me %}
+                <div class="mb-3">
+                    <div class="form-check">
+                        {{ wizard.form.remember_me }}
+                        <label class="form-check-label" for="{{ wizard.form.remember_me.id_for_label }}">
+                            Remember me for 7 days
+                        </label>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- CAPTCHA (if required) -->
+                {% if wizard.form.captcha %}
+                <div class="captcha-container">
+                    {{ wizard.form.captcha }}
+                    {% if wizard.form.captcha.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ wizard.form.captcha.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                    <i class="bi bi-box-arrow-in-right"></i> Sign In
+                </button>
+
+                <!-- Links -->
+                <div class="d-flex justify-content-between mb-3">
+                    <a href="{% url 'accounts:password_reset' %}">Forgot Password?</a>
+                    <a href="{% url 'accounts:resend_verification' %}">Resend Verification</a>
+                </div>
+
+                <!-- Register Link -->
+                <div class="text-center">
+                    <p>Don't have an account? <a href="{% url 'accounts:register' %}">Register here</a></p>
+                </div>
+            </form>
+
+        {% elif wizard.steps.current == 'token' %}
+            <!-- Step 2: 2FA Token -->
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                {{ wizard.management_form }}
+                
+                <div class="alert alert-2fa mb-3">
+                    <i class="bi bi-shield-lock-fill"></i>
+                    Two-Factor Authentication Required
+                </div>
+
+                {% if wizard.form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ wizard.form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <!-- Token Field -->
+                <div class="mb-3">
+                    <label for="{{ wizard.form.token.id_for_label }}" class="form-label">
+                        <i class="bi bi-key-fill"></i> Authentication Code
+                    </label>
+                    {{ wizard.form.token }}
+                    {% if wizard.form.token.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ wizard.form.token.errors.0 }}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">
+                        Enter the 6-digit code from your authenticator app
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-success btn-lg w-100 mb-3 btn-2fa">
+                    <i class="bi bi-shield-check"></i> Verify & Login
+                </button>
+
+                <!-- Back Button -->
+                <a href="{% url 'two_factor:login' %}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-arrow-left"></i> Back to Login
+                </a>
+
+                <!-- Help Text -->
+                <div class="mt-3 text-center">
+                    <small class="text-muted">
+                        Lost access to your authenticator? 
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#backupModal">Use backup code</a>
+                    </small>
+                </div>
+            </form>
+
+        {% elif wizard.steps.current == 'backup' %}
+            <!-- Step 2 Alternative: Backup Token -->
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                {{ wizard.management_form }}
+                
+                <div class="alert alert-warning mb-3">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    Using Backup Code
+                </div>
+
+                <!-- Backup Token Field -->
+                <div class="mb-3">
+                    <label for="{{ wizard.form.token.id_for_label }}" class="form-label">
+                        <i class="bi bi-file-lock-fill"></i> Backup Code
+                    </label>
+                    {{ wizard.form.token }}
+                    {% if wizard.form.token.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ wizard.form.token.errors.0 }}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">
+                        Enter one of your backup codes (single use only)
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-warning btn-lg w-100 mb-3">
+                    <i class="bi bi-unlock"></i> Use Backup Code
+                </button>
+
+                <!-- Back Button -->
+                <a href="{% url 'two_factor:login' %}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-arrow-left"></i> Back to Login
+                </a>
+            </form>
+        {% endif %}
+
+        <!-- Security Notice -->
+        <div class="alert alert-security small mt-3">
+            <h6 class="alert-heading"><i class="bi bi-shield-check"></i> Security Notice</h6>
+            <ul class="mb-0">
+                <li>Your connection is encrypted</li>
+                <li>Failed login attempts are monitored</li>
+                <li>Account locks after 5 failed attempts</li>
+                <li>Session expires after 30 minutes of inactivity</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Code Modal -->
+<div class="modal fade" id="backupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Lost Access to Authenticator?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>If you've lost access to your authenticator app, you can:</p>
+                <ol>
+                    <li>Use one of your backup codes (if you saved them)</li>
+                    <li>Contact support for account recovery</li>
+                    <li>Verify your identity through email</li>
+                </ol>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Each backup code can only be used once.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="{% url 'accounts:password_reset' %}" class="btn btn-primary">Account Recovery</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/main.js' %}"></script>
+{% endblock %}

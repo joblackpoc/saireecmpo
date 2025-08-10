@@ -1,0 +1,168 @@
+# Pre-commit hooks for security and code quality
+# Install: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Python Security Linters
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.10
+    hooks:
+      - id: bandit
+        args: ['-r', '.', '-f', 'json', '-o', 'bandit-report.json', '--severity-level', 'medium']
+        exclude: '^(venv/|tests/|migrations/)'
+        
+  # Semgrep - Advanced Security Patterns
+  - repo: https://github.com/returntocorp/semgrep
+    rev: v1.97.0
+    hooks:
+      - id: semgrep
+        args: ['--config=auto', '--severity=ERROR']
+        exclude: '^(venv/|static/|media/)'
+
+  # Safety - Check for known vulnerabilities in dependencies
+  - repo: local
+    hooks:
+      - id: safety
+        name: safety
+        entry: safety check
+        language: system
+        files: requirements\.txt$
+        pass_filenames: false
+
+  # Secret Detection
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: '^(\.git/|venv/|\.env\.example)$'
+
+  # Python Code Quality
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        language_version: python3.10
+        exclude: '^(migrations/|venv/)'
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        args: ['--max-line-length=120', '--ignore=E203,W503']
+        exclude: '^(migrations/|venv/)'
+        additional_dependencies: [
+          'flake8-django',
+          'flake8-bugbear',
+          'flake8-security'
+        ]
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ['--profile', 'black']
+        exclude: '^(migrations/|venv/)'
+
+  # Type Checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        args: ['--ignore-missing-imports', '--no-strict-optional']
+        exclude: '^(migrations/|venv/|tests/)'
+        additional_dependencies: ['django-stubs']
+
+  # Django-specific checks
+  - repo: local
+    hooks:
+      - id: django-check
+        name: Django Check
+        entry: python manage.py check --deploy
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: django-migrations
+        name: Check Django Migrations
+        entry: python manage.py makemigrations --check --dry-run
+        language: system
+        pass_filenames: false
+        always_run: true
+
+  # YAML/JSON/TOML validation
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+        args: ['--safe']
+      - id: check-json
+      - id: check-toml
+      - id: check-xml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-ast
+      - id: debug-statements
+      - id: check-docstring-first
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  # SQL Injection Detection for Raw Queries
+  - repo: local
+    hooks:
+      - id: check-sql-injection
+        name: SQL Injection Check
+        entry: grep -r "\.raw\|\.extra\|cursor\.execute" --include="*.py"
+        language: system
+        files: \.py$
+        pass_filenames: false
+        exclude: '^(migrations/|venv/)'
+
+  # Django Template Security
+  - repo: local
+    hooks:
+      - id: check-template-autoescape
+        name: Template Autoescape Check
+        entry: grep -r "{% autoescape off %}\|{{ .*|safe }}" --include="*.html"
+        language: system
+        files: \.html$
+        pass_filenames: false
+        exclude: '^(venv/|node_modules/)'
+
+  # Check for hardcoded secrets
+  - repo: local
+    hooks:
+      - id: check-hardcoded-secrets
+        name: Hardcoded Secrets Check
+        entry: grep -r "SECRET_KEY\|PASSWORD\|API_KEY\|TOKEN" --include="*.py"
+        language: system
+        files: \.py$
+        pass_filenames: false
+        exclude: '^(\.env\.example|settings\.py|venv/)'
+
+  # License headers check
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.5
+    hooks:
+      - id: insert-license
+        files: \.py$
+        args: ['--license-filepath', 'LICENSE-HEADER.txt', '--comment-style', '#']
+        exclude: '^(migrations/|venv/)'
+
+# Pre-commit configuration
+default_language_version:
+  python: python3.10
+
+fail_fast: false
+exclude: '^(\.git/|\.venv/|venv/|build/|dist/|.*\.egg-info/)'
+
+# To skip a hook temporarily, use:
+# SKIP=hook-id pre-commit run --all-files
+# Example: SKIP=mypy pre-commit run --all-files
