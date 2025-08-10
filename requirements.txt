@@ -40,7 +40,7 @@ django-structlog==9.1.1
 django-turnstile==0.1.2
 django-two-factor-auth==1.17.0
 djangorestframework==3.16.1
-djangorestframework_simplejwt==5.5.1
+djangorestframework_simplejwt==5.4.0
 dparse==0.6.4
 exceptiongroup==1.2.2
 face==24.0.0

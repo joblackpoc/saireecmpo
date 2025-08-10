@@ -16,7 +16,7 @@ mysqlclient==2.2.4  # MySQL adapter (alternative to psycopg2)
 # API & CORS
 djangorestframework==3.15.2  # REST API framework
 django-cors-headers==4.4.0  # CORS security headers
-djangorestframework-simplejwt==5.3.1  # JWT authentication for API
+djangorestframework-simplejwt==5.4.0  # JWT authentication for API
 
 # Content Management
 Pillow==10.4.0  # Image processing with security patches
