@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Pages - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+<link rel="stylesheet" href="{% static 'css/cms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="page-title">Content Pages</h1>
+        {% if user.is_authenticated %}
+            <a href="{% url 'cms:page_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> New Page
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="search-box">
+        <form method="get" action="">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="page-search" class="form-label">Search</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="page-search" 
+                                   name="q" 
+                                   value="{{ request.GET.q }}"
+                                   placeholder="Search pages...">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="category-filter" class="form-label">Category</label>
+                        <select class="form-select" id="category-filter" name="category">
+                            <option value="">All Categories</option>
+                            {% for category in search_form.fields.category.queryset %}
+                                <option value="{{ category.id }}" 
+                                        {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="status-filter" class="form-label">Status</label>
+                        <select class="form-select" id="status-filter" name="status">
+                            <option value="">All Statuses</option>
+                            <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>Draft</option>
+                            <option value="review" {% if request.GET.status == 'review' %}selected{% endif %}>Under Review</option>
+                            <option value="published" {% if request.GET.status == 'published' %}selected{% endif %}>Published</option>
+                            <option value="archived" {% if request.GET.status == 'archived' %}selected{% endif %}>Archived</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel"></i> Apply Filters
+                    </button>
+                    <a href="{% url 'cms:page_list' %}" class="btn btn-outline-secondary ms-2">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </a>
+                    
+                    {% if user.is_authenticated %}
+                        <div class="form-check form-check-inline ms-3">
+                            <input class="form-check-input" type="checkbox" id="featured-only" name="featured" 
+                                   {% if request.GET.featured %}checked{% endif %}>
+                            <label class="form-check-label" for="featured-only">
+                                <i class="bi bi-star-fill text-warning"></i> Featured Only
+                            </label>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bulk Actions (for authenticated users) -->
+    {% if user.is_authenticated and pages %}
+        <div class="bulk-actions">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted">
+                        <span id="selected-count">0</span> items selected
+                    </span>
+                </div>
+                <div class="d-flex gap-2">
+                    <select class="form-select form-select-sm" id="bulk-action-select" style="width: auto;">
+                        <option value="">Choose action...</option>
+                        <option value="publish">Publish</option>
+                        <option value="unpublish">Unpublish</option>
+                        <option value="feature">Feature</option>
+                        <option value="unfeature">Unfeature</option>
+                        <option value="delete">Delete</option>
+                    </select>
+                    <button class="btn btn-sm btn-primary" id="bulk-action-btn">Apply</button>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Results Count -->
+    <div class="mb-3">
+        <small class="text-muted">
+            <span id="results-count">{{ total_count }} result{{ total_count|pluralize }}</span>
+            {% if user.is_authenticated and my_pages_count %}
+                • <a href="{% url 'cms:my_pages' %}">{{ my_pages_count }} your page{{ my_pages_count|pluralize }}</a>
+                {% if draft_count %}
+                    • <span class="text-warning">{{ draft_count }} draft{{ draft_count|pluralize }}</span>
+                {% endif %}
+            {% endif %}
+        </small>
+    </div>
+
+    <!-- Page List -->
+    <div class="page-list">
+        {% for page in pages %}
+            <div class="page-card {{ page.status }}">
+                {% if user.is_authenticated %}
+                    <input type="checkbox" class="page-checkbox bulk-select" value="{{ page.id }}">
+                {% endif %}
+                
+                <div class="row">
+                    <div class="col-md-8">
+                        <h3 class="page-title">
+                            <a href="{% url 'cms:page_detail' slug=page.slug %}">
+                                {{ page.title }}
+                            </a>
+                            {% if page.featured %}
+                                <i class="bi bi-star-fill featured-icon"></i>
+                            {% endif %}
+                        </h3>
+                        
+                        {% if page.excerpt %}
+                            <p class="page-excerpt text-muted">{{ page.excerpt|truncatewords:30 }}</p>
+                        {% endif %}
+                        
+                        <div class="page-meta-inline">
+                            <span class="status-badge {{ page.status }}">{{ page.get_status_display }}</span>
+                            
+                            {% if page.category %}
+                                <a href="{% url 'cms:category_detail' slug=page.category.slug %}" 
+                                   class="category-badge">
+                                    {{ page.category.name }}
+                                </a>
+                            {% endif %}
+                            
+                            {% for tag in page.tags.all|slice:":5" %}
+                                <a href="{% url 'cms:tag_detail' slug=tag.slug %}" class="tag-badge">
+                                    {{ tag.name }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 text-end">
+                        <div class="page-meta-item">
+                            <i class="bi bi-person"></i>
+                            <span>{{ page.author.get_display_name }}</span>
+                        </div>
+                        <div class="page-meta-item">
+                            <i class="bi bi-calendar"></i>
+                            <span>{{ page.publish_at|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="page-meta-item">
+                            <i class="bi bi-eye"></i>
+                            <span>{{ page.view_count }} view{{ page.view_count|pluralize }}</span>
+                        </div>
+                        
+                        {% if page.can_edit %}
+                            <div class="action-buttons mt-2">
+                                <a href="{% url 'cms:page_edit' slug=page.slug %}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                                {% if page.status == 'draft' %}
+                                    <button class="btn btn-sm btn-success publish-btn" 
+                                            data-slug="{{ page.slug }}">
+                                        <i class="bi bi-send"></i> Publish
+                                    </button>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="empty-state">
+                <i class="bi bi-file-earmark-text"></i>
+                <h3>No Pages Found</h3>
+                <p>No pages match your search criteria.</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'cms:page_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Create Your First Page
+                    </a>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <div class="pagination-container">
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                                First
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                                Last
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/main.js' %}"></script>
+<script src="{% static 'js/cms.js' %}"></script>
+<script>
+    // Quick publish functionality
+    document.querySelectorAll('.publish-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const slug = this.dataset.slug;
+            if (confirm('Are you sure you want to publish this page?')) {
+                try {
+                    const response = await fetch(`/cms/page/${slug}/publish/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Failed to publish page');
+                    }
+                } catch (error) {
+                    console.error('Publish error:', error);
+                    alert('An error occurred');
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

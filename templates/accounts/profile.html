@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Profile - {{ user.get_display_name }} - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">My Profile</h1>
+
+    <div class="row">
+        <!-- Profile Overview -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        {{ user.first_name.0|upper }}{{ user.last_name.0|upper|default:"U" }}
+                    </div>
+                    <h3 class="text-center">{{ user.get_full_name }}</h3>
+                    <p class="text-center mb-0">{{ user.email }}</p>
+                </div>
+                <div class="profile-info">
+                    <div class="row">
+                        <div class="col-6 profile-stat">
+                            <div class="profile-stat-value">
+                                {% if user.pages.count %}
+                                    {{ user.pages.count }}
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </div>
+                            <div class="profile-stat-label">Pages</div>
+                        </div>
+                        <div class="col-6 profile-stat">
+                            <div class="profile-stat-value">
+                                {% if user.two_factor_enabled %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% else %}
+                                    <i class="bi bi-x-circle-fill text-warning"></i>
+                                {% endif %}
+                            </div>
+                            <div class="profile-stat-label">2FA Status</div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'accounts:profile_edit' %}" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Edit Profile
+                        </a>
+                        <a href="{% url 'accounts:security_settings' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-shield-check"></i> Security Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Details -->
+        <div class="col-md-8">
+            <!-- Personal Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-person-fill"></i> Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-3">
+                            <strong>Email:</strong>
+                        </div>
+                        <div class="col-sm-9">
+                            {{ user.email }}
+                            {% if user.email_verified %}
+                                <span class="badge bg-success ms-2">
+                                    <i class="bi bi-check-circle"></i> Verified
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning ms-2">
+                                    <i class="bi bi-exclamation-circle"></i> Not Verified
+                                </span>
+                                <a href="{% url 'accounts:resend_verification' %}" class="ms-2">Resend</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-3">
+                            <strong>First Name:</strong>
+                        </div>
+                        <div class="col-sm-9">
+                            {{ user.first_name|default:"Not set" }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-3">
+                            <strong>Last Name:</strong>
+                        </div>
+                        <div class="col-sm-9">
+                            {{ user.last_name|default:"Not set" }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-3">
+                            <strong>Display Name:</strong>
+                        </div>
+                        <div class="col-sm-9">
+                            {{ user.display_name|default:user.get_short_name }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-3">
+                            <strong>Member Since:</strong>
+                        </div>
+                        <div class="col-sm-9">
+                            {{ user.date_joined|date:"F j, Y" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-shield-lock-fill"></i> Security Information</h5>
+                </div>
+                <div class="card-body">
+                    <div 
+                        data-password-age="{% if user.password_changed_at %}{{ user.password_changed_at|timesince|slice:":2" }}{% else %}999{% endif %}"
+                        data-2fa-enabled="{{ user.two_factor_enabled|yesno:'true,false' }}"
+                        data-email-verified="{{ user.email_verified|yesno:'true,false' }}"
+                    >
+                        <div class="row mb-3">
+                            <div class="col-sm-4">
+                                <strong>Two-Factor Auth:</strong>
+                            </div>
+                            <div class="col-sm-8">
+                                {% if user.two_factor_enabled %}
+                                    <span class="security-indicator">
+                                        <i class="bi bi-shield-check me-1"></i> Enabled
+                                    </span>
+                                    <a href="{% url 'accounts:two_factor_backup' %}" class="ms-2">View Backup Codes</a>
+                                {% else %}
+                                    <span class="security-indicator warning">
+                                        <i class="bi bi-shield-exclamation me-1"></i> Disabled
+                                    </span>
+                                    <a href="{% url 'accounts:two_factor_setup' %}" class="ms-2 btn btn-sm btn-success">
+                                        Enable 2FA
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-sm-4">
+                                <strong>Password Last Changed:</strong>
+                            </div>
+                            <div class="col-sm-8">
+                                {% if user.password_changed_at %}
+                                    {{ user.password_changed_at|date:"F j, Y" }}
+                                    {% if user.check_password_age %}
+                                        <span class="badge bg-warning ms-2">
+                                            <i class="bi bi-exclamation-triangle"></i> Needs Update
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    Never
+                                {% endif %}
+                                <a href="{% url 'accounts:change_password' %}" class="ms-2">Change Password</a>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-sm-4">
+                                <strong>Last Login:</strong>
+                            </div>
+                            <div class="col-sm-8">
+                                {% if user.last_login %}
+                                    {{ user.last_login|date:"F j, Y g:i A" }}
+                                    {% if user.last_login_ip %}
+                                        <br><small class="text-muted">IP: {{ user.last_login_ip }}</small>
+                                    {% endif %}
+                                {% else %}
+                                    This is your first login
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-sm-4">
+                                <strong>Failed Login Attempts:</strong>
+                            </div>
+                            <div class="col-sm-8">
+                                {{ user.failed_login_attempts }}
+                                {% if user.failed_login_attempts > 0 %}
+                                    <span class="text-muted ms-2">
+                                        (Last: {{ user.last_failed_login|date:"F j, Y g:i A" }})
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <button id="security-check-btn" class="btn btn-primary">
+                        <i class="bi bi-shield-check"></i> Run Security Check
+                    </button>
+                    
+                    <div id="security-check-results" class="mt-3"></div>
+                </div>
+            </div>
+
+            <!-- Account Status -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle-fill"></i> Account Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-3">
+                            <strong>Account Type:</strong>
+                        </div>
+                        <div class="col-sm-9">
+                            {% if user.is_superuser %}
+                                <span class="badge bg-danger">Superuser</span>
+                            {% elif user.is_staff %}
+                                <span class="badge bg-primary">Staff</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Regular User</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-3">
+                            <strong>Account Status:</strong>
+                        </div>
+                        <div class="col-sm-9">
+                            {% if user.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                            
+                            {% if user.is_locked %}
+                                <span class="badge bg-danger ms-2">Locked</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-3">
+                            <strong>Privacy Consent:</strong>
+                        </div>
+                        <div class="col-sm-9">
+                            {% if user.data_privacy_consent %}
+                                <span class="badge bg-success">Given</span>
+                                <small class="text-muted ms-2">
+                                    ({{ user.consent_timestamp|date:"F j, Y" }})
+                                </small>
+                            {% else %}
+                                <span class="badge bg-warning">Not Given</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle-fill"></i> Danger Zone</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">These actions are permanent and cannot be undone.</p>
+                    <a href="{% url 'accounts:account_delete' %}" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Delete Account
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/main.js' %}"></script>
+{% endblock %}

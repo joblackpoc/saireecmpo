@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Page - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+<link rel="stylesheet" href="{% static 'css/cms.css' %}">
+<!-- CKEditor CSS -->
+<link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/39.0.0/classic/ckeditor.css">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">
+        {% if form.instance.pk %}
+            Edit Page: {{ form.instance.title }}
+        {% else %}
+            Create New Page
+        {% endif %}
+    </h1>
+
+    <form method="post" id="page-form" class="needs-validation" novalidate data-unsaved="false">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="row">
+            <!-- Main Content Area -->
+            <div class="col-md-8">
+                <!-- Title -->
+                <div class="mb-3">
+                    <label for="{{ form.title.id_for_label }}" class="form-label">
+                        Title <span class="text-danger">*</span>
+                    </label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.title.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Slug -->
+                <div class="mb-3">
+                    <label for="{{ form.slug.id_for_label }}" class="form-label">
+                        URL Slug
+                        <small class="text-muted">(auto-generated if left blank)</small>
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">/cms/page/</span>
+                        {{ form.slug }}
+                    </div>
+                    {% if form.slug.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.slug.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Excerpt -->
+                <div class="mb-3">
+                    <label for="{{ form.excerpt.id_for_label }}" class="form-label">
+                        Excerpt
+                        <small class="text-muted">(Brief description)</small>
+                    </label>
+                    {{ form.excerpt }}
+                    {% if form.excerpt.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.excerpt.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Content -->
+                <div class="mb-3">
+                    <label for="{{ form.content.id_for_label }}" class="form-label">
+                        Content <span class="text-danger">*</span>
+                    </label>
+                    {{ form.content }}
+                    {% if form.content.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.content.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- SEO Section -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-search"></i> SEO Settings
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Meta Title -->
+                        <div class="mb-3">
+                            <label for="{{ form.meta_title.id_for_label }}" class="form-label">
+                                Meta Title
+                                <small class="text-muted">(max 70 characters)</small>
+                            </label>
+                            {{ form.meta_title }}
+                            {% if form.meta_title.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.meta_title.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Meta Description -->
+                        <div class="mb-3">
+                            <label for="{{ form.meta_description.id_for_label }}" class="form-label">
+                                Meta Description
+                                <small class="text-muted">(max 160 characters)</small>
+                            </label>
+                            {{ form.meta_description }}
+                            {% if form.meta_description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.meta_description.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Meta Keywords -->
+                        <div class="mb-3">
+                            <label for="{{ form.meta_keywords.id_for_label }}" class="form-label">
+                                Meta Keywords
+                                <small class="text-muted">(comma-separated)</small>
+                            </label>
+                            {{ form.meta_keywords }}
+                            {% if form.meta_keywords.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.meta_keywords.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-md-4">
+                <!-- Publishing Options -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-gear"></i> Publishing
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Status -->
+                        <div class="mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.status.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Visibility -->
+                        <div class="mb-3">
+                            <label for="{{ form.visibility.id_for_label }}" class="form-label">Visibility</label>
+                            {{ form.visibility }}
+                            {% if form.visibility.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.visibility.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Publish Date -->
+                        <div class="mb-3" id="publish-at-field">
+                            <label for="{{ form.publish_at.id_for_label }}" class="form-label">Publish Date</label>
+                            {{ form.publish_at }}
+                            {% if form.publish_at.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.publish_at.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Unpublish Date -->
+                        <div class="mb-3">
+                            <label for="{{ form.unpublish_at.id_for_label }}" class="form-label">
+                                Unpublish Date
+                                <small class="text-muted">(optional)</small>
+                            </label>
+                            {{ form.unpublish_at }}
+                            {% if form.unpublish_at.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.unpublish_at.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Featured -->
+                        <div class="form-check mb-3">
+                            {{ form.featured }}
+                            <label class="form-check-label" for="{{ form.featured.id_for_label }}">
+                                <i class="bi bi-star-fill text-warning"></i> Featured Page
+                            </label>
+                        </div>
+
+                        <!-- Allow Comments -->
+                        <div class="form-check mb-3">
+                            {{ form.allow_comments }}
+                            <label class="form-check-label" for="{{ form.allow_comments.id_for_label }}">
+                                <i class="bi bi-chat-dots"></i> Allow Comments
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Organization -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-folder"></i> Organization
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Category -->
+                        <div class="mb-3">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.category.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Tags -->
+                        <div class="mb-3">
+                            <label for="{{ form.tags.id_for_label }}" class="form-label">Tags</label>
+                            <div id="tag-container" class="mb-2"></div>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="tag-input" 
+                                   placeholder="Type and press Enter">
+                            {{ form.tags }}
+                            {% if form.tags.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.tags.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Settings -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-shield-lock"></i> Security
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Requires Auth -->
+                        <div class="form-check mb-3">
+                            {{ form.requires_auth }}
+                            <label class="form-check-label" for="{{ form.requires_auth.id_for_label }}">
+                                Require Authentication
+                            </label>
+                        </div>
+
+                        <!-- Allowed Groups -->
+                        {% if form.allowed_groups %}
+                            <div class="mb-3">
+                                <label for="{{ form.allowed_groups.id_for_label }}" class="form-label">
+                                    Allowed Groups
+                                </label>
+                                {{ form.allowed_groups }}
+                                {% if form.allowed_groups.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.allowed_groups.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card">
+                    <div class="card-body">
+                        <button type="submit" name="action" value="save" class="btn btn-primary w-100 mb-2">
+                            <i class="bi bi-save"></i> Save
+                        </button>
+                        
+                        <button type="submit" name="action" value="save_and_continue" class="btn btn-secondary w-100 mb-2">
+                            <i class="bi bi-save"></i> Save and Continue Editing
+                        </button>
+                        
+                        <button type="button" id="preview-btn" class="btn btn-outline-primary w-100 mb-2">
+                            <i class="bi bi-eye"></i> Preview
+                        </button>
+                        
+                        {% if form.instance.pk %}
+                            <a href="{% url 'cms:page_detail' slug=form.instance.slug %}" 
+                               class="btn btn-outline-secondary w-100 mb-2">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            
+                            <hr>
+                            
+                            <a href="{% url 'cms:page_versions' slug=form.instance.slug %}" 
+                               class="btn btn-outline-info w-100 mb-2">
+                                <i class="bi bi-clock-history"></i> Version History
+                            </a>
+                            
+                            {% if form.instance.can_delete %}
+                                <a href="{% url 'cms:page_delete' slug=form.instance.slug %}" 
+                                   class="btn btn-outline-danger w-100">
+                                    <i class="bi bi-trash"></i> Delete Page
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'cms:page_list' %}" 
+                               class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/main.js' %}"></script>
+<script src="{% static 'js/cms.js' %}"></script>
+<!-- CKEditor -->
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.0/classic/ckeditor.js"></script>
+<script>
+    // Initialize CKEditor
+    ClassicEditor
+        .create(document.querySelector('#{{ form.content.id_for_label }}'), {
+            toolbar: {
+                items: [
+                    'heading', '|',
+                    'bold', 'italic', 'underline', 'strikethrough', '|',
+                    'link', 'uploadImage', 'blockQuote', '|',
+                    'bulletedList', 'numberedList', 'outdent', 'indent', '|',
+                    'insertTable', 'tableColumn', 'tableRow', 'mergeTableCells', '|',
+                    'undo', 'redo', '|',
+                    'sourceEditing'
+                ]
+            },
+            image: {
+                toolbar: [
+                    'imageTextAlternative', 'imageStyle:inline', 'imageStyle:block', 'imageStyle:side'
+                ]
+            },
+            table: {
+                contentToolbar: [
+                    'tableColumn', 'tableRow', 'mergeTableCells'
+                ]
+            }
+        })
+        .then(editor => {
+            console.log('Editor initialized');
+            
+            // Track changes for unsaved warning
+            editor.model.document.on('change:data', () => {
+                document.getElementById('page-form').dataset.unsaved = 'true';
+            });
+        })
+        .catch(error => {
+            console.error('CKEditor error:', error);
+        });
+    
+    // Handle form submission
+    document.getElementById('page-form').addEventListener('submit', function(e) {
+        const action = e.submitter.value;
+        
+        if (action === 'save_and_continue') {
+            // Add a hidden field to indicate continue editing
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'continue_editing';
+            input.value = 'true';
+            this.appendChild(input);
+        }
+        
+        // Clear unsaved flag
+        this.dataset.unsaved = 'false';
+    });
+</script>
+{% endblock %}

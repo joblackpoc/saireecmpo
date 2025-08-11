@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Two-Factor Backup Codes - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+<style>
+    @media print {
+        .no-print { display: none !important; }
+        .backup-codes { page-break-inside: avoid; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">
+                        <i class="bi bi-file-lock-fill"></i> Two-Factor Backup Codes
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning no-print">
+                        <h5><i class="bi bi-exclamation-triangle-fill"></i> Important: Save These Codes</h5>
+                        <p>These backup codes can be used to access your account if you lose access to your authenticator app. Each code can only be used once.</p>
+                        <ul class="mb-0">
+                            <li>Store them in a safe place</li>
+                            <li>Do not share them with anyone</li>
+                            <li>Each code works only once</li>
+                            <li>Generate new codes if these are compromised</li>
+                        </ul>
+                    </div>
+
+                    <div class="backup-codes">
+                        <h5 class="text-center mb-3">Your Backup Codes</h5>
+                        <div class="backup-codes-list text-center">
+                            {% for token in tokens %}
+                                <code>{{ token.token }}</code>
+                                {% if forloop.counter|divisibleby:2 %}<br>{% endif %}
+                            {% empty %}
+                                <p class="text-muted">No backup codes available. Please generate new codes.</p>
+                            {% endfor %}
+                        </div>
+                        
+                        {% if tokens %}
+                        <hr>
+                        <div class="text-center text-muted">
+                            <small>
+                                Generated: {{ user.backup_codes_generated|date:"F j, Y g:i A" }}<br>
+                                Account: {{ user.email }}
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-4 no-print">
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <button id="print-backup-codes" class="btn btn-primary w-100">
+                                    <i class="bi bi-printer"></i> Print Codes
+                                </button>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <button class="btn btn-success w-100 copy-btn" data-text="{{ tokens|join:' ' }}">
+                                    <i class="bi bi-clipboard"></i> Copy All
+                                </button>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <button class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#regenerateModal">
+                                    <i class="bi bi-arrow-clockwise"></i> Regenerate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info no-print mt-3">
+                        <h6><i class="bi bi-info-circle-fill"></i> How to Use Backup Codes</h6>
+                        <ol class="mb-0">
+                            <li>Go to the login page and enter your email and password</li>
+                            <li>When prompted for your 2FA code, click "Use backup code"</li>
+                            <li>Enter one of your unused backup codes</li>
+                            <li>The code will be marked as used and cannot be used again</li>
+                        </ol>
+                    </div>
+
+                    <div class="text-center no-print">
+                        <a href="{% url 'accounts:security_settings' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Security Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Regenerate Modal -->
+<div class="modal fade" id="regenerateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Regenerate Backup Codes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Warning
+                </div>
+                <p>Regenerating backup codes will:</p>
+                <ul>
+                    <li>Invalidate all current backup codes</li>
+                    <li>Generate 10 new backup codes</li>
+                    <li>Require you to save the new codes</li>
+                </ul>
+                <p>Are you sure you want to continue?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'accounts:two_factor_backup' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="regenerate" value="true">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-arrow-clockwise"></i> Regenerate Codes
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/main.js' %}"></script>
+{% endblock %}

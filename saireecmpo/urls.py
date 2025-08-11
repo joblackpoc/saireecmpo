@@ -44,7 +44,7 @@ urlpatterns = [
     
     # Admin with 2FA protection
     path('admin/', admin.site.urls),
-    
+    path('ckeditor5/', include('django_ckeditor_5.urls')),
     # Honeypot field for bot detection (fake login URL)
     path('accounts/login/', include('honeypot.urls')),
     

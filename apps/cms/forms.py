@@ -6,7 +6,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
-from ckeditor5.widgets import CKEditor5Widget
+from django_ckeditor_5.widgets import CKEditor5Widget 
 import re
 
 from .models import Page, Category, Tag

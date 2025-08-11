@@ -62,10 +62,11 @@ INSTALLED_APPS = [
     'honeypot',  # Bot trap
     'django_filters',
     
+    
     # API & CORS
     'rest_framework',
     'rest_framework_simplejwt',
-    'corsheaders',
+    'django_ckeditor_5',
     
     # Content Management
     'ckeditor5',
@@ -328,12 +329,19 @@ SIMPLE_JWT = {
 # CKEditor 5 Configuration
 CKEDITOR_5_CONFIGS = {
     'default': {
-        'toolbar': ['heading', '|', 'bold', 'italic', 'link',
-                   'bulletedList', 'numberedList', 'blockQuote'],
-        'height': 300,
-        'width': 'auto',
+        'toolbar': {
+            'items': [
+                'heading', '|', 'bold', 'italic', 'link',
+                'bulletedList', 'numberedList', 'blockQuote',
+                'imageUpload',
+            ]
+        }
     },
+    'extends': {
+        # extended toolbar example...
+    }
 }
+CKEDITOR_5_MAX_FILE_SIZE = 5  # limit uploads to 5 MB (optional)
 
 # File Upload Security
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB

@@ -12,7 +12,7 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.urls import reverse
 import bleach
-from ckeditor5.fields import CKEditor5Field
+from django_ckeditor_5.fields import CKEditor5Field
 import uuid
 from datetime import datetime
 

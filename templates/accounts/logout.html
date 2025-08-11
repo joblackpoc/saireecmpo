@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Account Locked - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="lockout-container">
+    <div class="lockout-icon">
+        <i class="bi bi-lock-fill"></i>
+    </div>
+    
+    <h2>Account Temporarily Locked</h2>
+    
+    <div class="alert alert-danger mx-auto" style="max-width: 500px;">
+        <p>Your account has been temporarily locked due to multiple failed login attempts.</p>
+    </div>
+    
+    <div class="lockout-timer" id="lockout-timer" data-unlock-time="{{ locked_until|date:'c' }}">
+        Calculating...
+    </div>
+    
+    <div class="alert alert-info mx-auto mt-4" style="max-width: 500px;">
+        <h5><i class="bi bi-info-circle"></i> Why was my account locked?</h5>
+        <p>For security reasons, we temporarily lock accounts after 5 failed login attempts.</p>
+        <ul class="mb-0">
+            <li>This helps protect your account from unauthorized access</li>
+            <li>The lock is temporary and will expire automatically</li>
+            <li>You can try logging in again once the timer expires</li>
+        </ul>
+    </div>
+    
+    <div class="mt-4">
+        <a href="{% url 'accounts:password_reset' %}" class="btn btn-primary">
+            <i class="bi bi-key"></i> Reset Password
+        </a>
+        <a href="{% url 'home' %}" class="btn btn-outline-secondary ms-2">
+            <i class="bi bi-house"></i> Go to Homepage
+        </a>
+    </div>
+    
+    <div class="mt-5">
+        <p class="text-muted">
+            Need immediate access? <a href="/contact/">Contact Support</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/main.js' %}"></script>
+{% endblock %}

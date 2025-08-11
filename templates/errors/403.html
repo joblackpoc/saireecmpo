@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Access Denied - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-code">403</div>
+    <h2 class="error-message">Access Denied</h2>
+    
+    <div class="alert alert-danger mx-auto" style="max-width: 600px;">
+        <i class="bi bi-shield-exclamation"></i>
+        <p>You don't have permission to access this resource.</p>
+    </div>
+    
+    <div class="mt-4">
+        {% if not user.is_authenticated %}
+            <a href="{% url 'two_factor:login' %}" class="btn btn-primary">
+                <i class="bi bi-box-arrow-in-right"></i> Login
+            </a>
+        {% else %}
+            <a href="{% url 'home' %}" class="btn btn-primary">
+                <i class="bi bi-house"></i> Go to Homepage
+            </a>
+            <a href="javascript:history.back()" class="btn btn-outline-secondary ms-2">
+                <i class="bi bi-arrow-left"></i> Go Back
+            </a>
+        {% endif %}
+    </div>
+    
+    <div class="mt-5 text-muted">
+        <p>Possible reasons for this error:</p>
+        <ul class="text-start mx-auto" style="max-width: 400px;">
+            <li>You need to be logged in</li>
+            <li>Your account doesn't have the required permissions</li>
+            <li>The resource is restricted to certain users</li>
+            <li>Your session has expired</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

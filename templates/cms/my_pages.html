@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Pages - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+<link rel="stylesheet" href="{% static 'css/cms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="page-title">My Pages</h1>
+        <a href="{% url 'cms:page_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> New Page
+        </a>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-value">{{ stats.total }}</div>
+                <div class="stats-label">Total Pages</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-value text-success">{{ stats.published }}</div>
+                <div class="stats-label">Published</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-value text-warning">{{ stats.draft }}</div>
+                <div class="stats-label">Drafts</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-value text-info">{{ stats.review }}</div>
+                <div class="stats-label">Under Review</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <a class="nav-link {% if not current_status %}active{% endif %}" 
+               href="{% url 'cms:my_pages' %}">
+                All Pages
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if current_status == 'published' %}active{% endif %}" 
+               href="?status=published">
+                Published
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if current_status == 'draft' %}active{% endif %}" 
+               href="?status=draft">
+                Drafts
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if current_status == 'review' %}active{% endif %}" 
+               href="?status=review">
+                Under Review
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if current_status == 'archived' %}active{% endif %}" 
+               href="?status=archived">
+                Archived
+            </a>
+        </li>
+    </ul>
+
+    <!-- Quick Search -->
+    <div class="mb-3">
+        <input type="text" 
+               class="form-control" 
+               id="page-search" 
+               placeholder="Quick search your pages...">
+    </div>
+
+    <!-- Pages Table -->
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>
+                        <input type="checkbox" id="select-all-pages">
+                    </th>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Views</th>
+                    <th>Last Modified</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for page in pages %}
+                    <tr class="page-row">
+                        <td>
+                            <input type="checkbox" class="page-checkbox" value="{{ page.id }}">
+                        </td>
+                        <td>
+                            <strong>
+                                <a href="{% url 'cms:page_detail' slug=page.slug %}">
+                                    {{ page.title }}
+                                </a>
+                            </strong>
+                            {% if page.featured %}
+                                <i class="bi bi-star-fill featured-icon"></i>
+                            {% endif %}
+                            <br>
+                            <small class="text-muted">{{ page.slug }}</small>
+                        </td>
+                        <td>
+                            <span class="status-badge {{ page.status }}">
+                                {{ page.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ page.view_count }}</td>
+                        <td>
+                            {{ page.updated_at|date:"M d, Y" }}
+                            <br>
+                            <small class="text-muted">{{ page.updated_at|timesince }} ago</small>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{% url 'cms:page_edit' slug=page.slug %}" 
+                                   class="btn btn-outline-primary" 
+                                   title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'cms:page_preview' slug=page.slug %}" 
+                                   class="btn btn-outline-secondary" 
+                                   title="Preview"
+                                   target="_blank">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                
+                                {% if page.status == 'draft' %}
+                                    <button class="btn btn-outline-success quick-publish" 
+                                            data-slug="{{ page.slug }}"
+                                            title="Publish">
+                                        <i class="bi bi-send"></i>
+                                    </button>
+                                {% endif %}
+                                
+                                <button class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" 
+                                        data-bs-toggle="dropdown">
+                                    <span class="visually-hidden">Toggle Dropdown</span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" 
+                                           href="{% url 'cms:page_versions' slug=page.slug %}">
+                                            <i class="bi bi-clock-history"></i> Version History
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#">
+                                            <i class="bi bi-files"></i> Duplicate
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" 
+                                           href="{% url 'cms:page_delete' slug=page.slug %}">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="bi bi-file-earmark-text"></i>
+                                <h3>No Pages Yet</h3>
+                                <p>You haven't created any pages.</p>
+                                <a href="{% url 'cms:page_create' %}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> Create Your First Page
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Bulk Actions -->
+    <div class="bulk-actions">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="text-muted">
+                    <span id="selected-count">0</span> items selected
+                </span>
+            </div>
+            <div class="d-flex gap-2">
+                <select class="form-select form-select-sm" id="bulk-action-select" style="width: auto;">
+                    <option value="">Choose action...</option>
+                    <option value="publish">Publish</option>
+                    <option value="unpublish">Unpublish</option>
+                    <option value="archive">Archive</option>
+                    <option value="delete">Delete</option>
+                </select>
+                <button class="btn btn-sm btn-primary" id="bulk-action-btn">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <div class="pagination-container">
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}">
+                                Previous
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if current_status %}&status={{ current_status }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}">
+                                Next
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/main.js' %}"></script>
+<script src="{% static 'js/cms.js' %}"></script>
+<script>
+    // Quick publish functionality
+    document.querySelectorAll('.quick-publish').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const slug = this.dataset.slug;
+            if (confirm('Publish this page?')) {
+                try {
+                    const response = await fetch(`/cms/page/${slug}/publish/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        location.reload();
+                    }
+                } catch (error) {
+                    console.error('Publish error:', error);
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

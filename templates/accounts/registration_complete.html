@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Registration Complete - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card text-center">
+        <div class="mb-4">
+            <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+        </div>
+        
+        <h2>Registration Successful!</h2>
+        
+        <div class="alert alert-success mt-3">
+            <p class="mb-0">Your account has been created successfully.</p>
+        </div>
+        
+        <div class="alert alert-info">
+            <h5><i class="bi bi-envelope"></i> Check Your Email</h5>
+            <p>We've sent a verification link to your email address. Please click the link to verify your account.</p>
+            <ul class="text-start mb-0">
+                <li>Check your spam/junk folder if you don't see it</li>
+                <li>The link expires in 24 hours</li>
+                <li>You must verify your email before logging in</li>
+            </ul>
+        </div>
+        
+        <div class="mt-4">
+            <a href="{% url 'accounts:resend_verification' %}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-clockwise"></i> Resend Verification Email
+            </a>
+        </div>
+        
+        <hr>
+        
+        <p class="text-muted">
+            Already verified? <a href="{% url 'two_factor:login' %}">Login here</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/main.js' %}"></script>
+{% endblock %}

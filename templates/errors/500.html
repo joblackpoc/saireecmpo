@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Server Error - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-code">500</div>
+    <h2 class="error-message">Internal Server Error</h2>
+    
+    <div class="alert alert-danger mx-auto" style="max-width: 600px;">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <p>Something went wrong on our end. We're working to fix it.</p>
+    </div>
+    
+    <div class="mt-4">
+        <a href="{% url 'home' %}" class="btn btn-primary">
+            <i class="bi bi-house"></i> Go to Homepage
+        </a>
+        <button onclick="location.reload()" class="btn btn-outline-secondary ms-2">
+            <i class="bi bi-arrow-clockwise"></i> Try Again
+        </button>
+    </div>
+    
+    <div class="mt-5 text-muted">
+        <p>The error has been logged and our team has been notified.</p>
+        <p>If this problem persists, please contact support.</p>
+    </div>
+    
+    <div class="mt-3">
+        <small class="text-muted">Error ID: {{ request.META.UNIQUE_ID|default:"Unknown" }}</small>
+    </div>
+</div>
+{% endblock %}

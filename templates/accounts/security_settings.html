@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Security Settings - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Security Settings</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Two-Factor Authentication -->
+            <div class="security-setting {% if user.two_factor_enabled %}enabled{% else %}disabled{% endif %}">
+                <div class="security-status">
+                    <div>
+                        <h5><i class="bi bi-shield-lock-fill"></i> Two-Factor Authentication</h5>
+                        <p class="text-muted mb-0">Add an extra layer of security to your account</p>
+                    </div>
+                    <div class="text-end">
+                        {% if user.two_factor_enabled %}
+                            <span class="security-status-icon enabled">
+                                <i class="bi bi-check-circle-fill"></i>
+                            </span>
+                            <div class="mt-2">
+                                <a href="{% url 'accounts:two_factor_backup' %}" class="btn btn-sm btn-outline-primary">
+                                    Backup Codes
+                                </a>
+                                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#disable2FAModal">
+                                    Disable
+                                </button>
+                            </div>
+                        {% else %}
+                            <span class="security-status-icon disabled">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </span>
+                            <div class="mt-2">
+                                <a href="{% url 'accounts:two_factor_setup' %}" class="btn btn-sm btn-success">
+                                    Enable 2FA
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Password Security -->
+            <div class="security-setting">
+                <div class="security-status">
+                    <div>
+                        <h5><i class="bi bi-key-fill"></i> Password Security</h5>
+                        <p class="text-muted mb-0">
+                            Last changed: 
+                            {% if user.password_changed_at %}
+                                {{ user.password_changed_at|date:"F j, Y" }}
+                                {% if user.check_password_age %}
+                                    <span class="badge bg-warning ms-2">Update Recommended</span>
+                                {% endif %}
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <a href="{% url 'accounts:change_password' %}" class="btn btn-sm btn-primary">
+                            Change Password
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email Verification -->
+            <div class="security-setting {% if user.email_verified %}enabled{% else %}disabled{% endif %}">
+                <div class="security-status">
+                    <div>
+                        <h5><i class="bi bi-envelope-check-fill"></i> Email Verification</h5>
+                        <p class="text-muted mb-0">{{ user.email }}</p>
+                    </div>
+                    <div class="text-end">
+                        {% if user.email_verified %}
+                            <span class="security-status-icon enabled">
+                                <i class="bi bi-check-circle-fill"></i>
+                            </span>
+                        {% else %}
+                            <span class="security-status-icon disabled">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </span>
+                            <div class="mt-2">
+                                <a href="{% url 'accounts:resend_verification' %}" class="btn btn-sm btn-warning">
+                                    Verify Email
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Sessions -->
+            <div class="security-setting">
+                <div class="security-status">
+                    <div>
+                        <h5><i class="bi bi-laptop"></i> Active Sessions</h5>
+                        <p class="text-muted mb-0">Manage your active login sessions</p>
+                    </div>
+                    <div class="text-end">
+                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#sessionsModal">
+                            View Sessions
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Login History -->
+            <div class="security-setting">
+                <div class="security-status">
+                    <div>
+                        <h5><i class="bi bi-clock-history"></i> Login History</h5>
+                        <p class="text-muted mb-0">
+                            Last login: {{ user.last_login|date:"F j, Y g:i A" }}
+                            {% if user.last_login_ip %}
+                                from {{ user.last_login_ip }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#historyModal">
+                            View History
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Privacy Settings -->
+            <div class="security-setting">
+                <div class="security-status">
+                    <div>
+                        <h5><i class="bi bi-shield-fill-check"></i> Privacy Settings</h5>
+                        <p class="text-muted mb-0">Control your data and privacy preferences</p>
+                    </div>
+                    <div class="text-end">
+                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#privacyModal">
+                            Manage Privacy
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Tips Sidebar -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Security Tips</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            Enable two-factor authentication for maximum security
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            Use a unique, strong password with 12+ characters
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            Change your password every 90 days
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            Verify your email address to enable recovery options
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            Review your login history regularly
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            Save backup codes in a secure location
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Security Score -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-speedometer2"></i> Security Score</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% with score=0 %}
+                        {% if user.email_verified %}{% with score=score|add:25 %}{% endwith %}{% endif %}
+                        {% if user.two_factor_enabled %}{% with score=score|add:35 %}{% endwith %}{% endif %}
+                        {% if not user.check_password_age %}{% with score=score|add:20 %}{% endwith %}{% endif %}
+                        {% if user.failed_login_attempts == 0 %}{% with score=score|add:20 %}{% endwith %}{% endif %}
+                        
+                        <div class="display-4 
+                            {% if score >= 80 %}text-success
+                            {% elif score >= 60 %}text-warning
+                            {% else %}text-danger{% endif %}">
+                            {{ score|default:45 }}%
+                        </div>
+                        <p class="text-muted">
+                            {% if score >= 80 %}Excellent
+                            {% elif score >= 60 %}Good
+                            {% else %}Needs Improvement{% endif %}
+                        </p>
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Disable 2FA Modal -->
+<div class="modal fade" id="disable2FAModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Disable Two-Factor Authentication</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Warning
+                </div>
+                <p>Disabling two-factor authentication will:</p>
+                <ul>
+                    <li>Remove the extra security layer from your account</li>
+                    <li>Delete all backup codes</li>
+                    <li>Allow login with just email and password</li>
+                </ul>
+                <p>Are you sure you want to continue?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger">Disable 2FA</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sessions Modal -->
+<div class="modal fade" id="sessionsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Active Sessions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="list-group">
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Current Session</h6>
+                                <p class="mb-1">{{ request.META.HTTP_USER_AGENT|truncatechars:50 }}</p>
+                                <small class="text-muted">IP: {{ request.META.REMOTE_ADDR }}</small>
+                            </div>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-danger w-100">End All Other Sessions</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- History Modal -->
+<div class="modal fade" id="historyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Login History</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date/Time</th>
+                                <th>IP Address</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{{ user.last_login|date:"F j, Y g:i A" }}</td>
+                                <td>{{ user.last_login_ip|default:"-" }}</td>
+                                <td><span class="badge bg-success">Success</span></td>
+                            </tr>
+                            {% if user.last_failed_login %}
+                            <tr>
+                                <td>{{ user.last_failed_login|date:"F j, Y g:i A" }}</td>
+                                <td>-</td>
+                                <td><span class="badge bg-danger">Failed</span></td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Privacy Modal -->
+<div class="modal fade" id="privacyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Privacy Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="dataConsent" 
+                               {% if user.data_privacy_consent %}checked{% endif %}>
+                        <label class="form-check-label" for="dataConsent">
+                            I consent to data processing as per Privacy Policy
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                        <label class="form-check-label" for="emailNotifications">
+                            Receive security notifications via email
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="publicProfile">
+                        <label class="form-check-label" for="publicProfile">
+                            Make my profile publicly visible
+                        </label>
+                    </div>
+                </form>
+                <hr>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary">Download My Data</button>
+                    <a href="{% url 'accounts:account_delete' %}" class="btn btn-outline-danger">Delete Account</a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/main.js' %}"></script>
+{% endblock %}

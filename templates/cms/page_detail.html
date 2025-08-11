@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page.title }} - SecureCMS{% endblock %}
+
+{% block meta_description %}{{ page.meta_description|default:page.excerpt }}{% endblock %}
+{% block meta_keywords %}{{ page.meta_keywords }}{% endblock %}
+
+{% block og_title %}{{ page.title }}{% endblock %}
+{% block og_description %}{{ page.excerpt }}{% endblock %}
+{% block og_type %}article{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+<link rel="stylesheet" href="{% static 'css/cms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Preview Banner (if in preview mode) -->
+    {% if is_preview %}
+        <div class="preview-banner">
+            <i class="bi bi-eye"></i> Preview Mode - This page is not yet published
+        </div>
+    {% endif %}
+
+    <article>
+        <!-- Page Header -->
+        <header class="mb-4">
+            <h1 class="display-4">
+                {{ page.title }}
+                {% if page.featured %}
+                    <i class="bi bi-star-fill featured-icon"></i>
+                {% endif %}
+            </h1>
+            
+            <!-- Page Meta -->
+            <div class="page-meta">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="page-meta-item">
+                            <i class="bi bi-person-fill"></i>
+                            By {{ page.author.get_display_name }}
+                        </div>
+                        <div class="page-meta-item">
+                            <i class="bi bi-calendar"></i>
+                            Published {{ page.publish_at|date:"F j, Y" }}
+                            {% if page.updated_at != page.created_at %}
+                                • Updated {{ page.updated_at|date:"F j, Y" }}
+                            {% endif %}
+                        </div>
+                        <div class="page-meta-item">
+                            <i class="bi bi-eye"></i>
+                            {{ page.view_count }} view{{ page.view_count|pluralize }}
+                        </div>
+                        
+                        {% if page.category %}
+                            <div class="page-meta-item">
+                                <i class="bi bi-folder"></i>
+                                <a href="{% url 'cms:category_detail' slug=page.category.slug %}" 
+                                   class="category-badge">
+                                    {{ page.category.name }}
+                                </a>
+                            </div>
+                        {% endif %}
+                        
+                        {% if page.tags.exists %}
+                            <div class="page-meta-item">
+                                <i class="bi bi-tags"></i>
+                                {% for tag in page.tags.all %}
+                                    <a href="{% url 'cms:tag_detail' slug=tag.slug %}" class="tag-badge">
+                                        {{ tag.name }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-4 text-end">
+                        {% if can_edit %}
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'cms:page_edit' slug=page.slug %}" 
+                                   class="btn btn-outline-primary">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                                
+                                {% if page.status == 'draft' %}
+                                    <button class="btn btn-success" id="publish-btn">
+                                        <i class="bi bi-send"></i> Publish
+                                    </button>
+                                {% elif page.status == 'published' %}
+                                    <button class="btn btn-warning" id="unpublish-btn">
+                                        <i class="bi bi-eye-slash"></i> Unpublish
+                                    </button>
+                                {% endif %}
+                                
+                                {% if can_delete %}
+                                    <a href="{% url 'cms:page_delete' slug=page.slug %}" 
+                                       class="btn btn-outline-danger">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Share Buttons -->
+                        <div class="mt-3">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="shareOnTwitter()">
+                                <i class="bi bi-twitter"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="shareOnFacebook()">
+                                <i class="bi bi-facebook"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="shareOnLinkedIn()">
+                                <i class="bi bi-linkedin"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="copyLink()">
+                                <i class="bi bi-link-45deg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Status Badge -->
+            {% if page.status != 'published' %}
+                <div class="alert alert-warning mt-3">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    This page is currently <strong>{{ page.get_status_display }}</strong>
+                    {% if page.status == 'draft' %}
+                        and is not visible to the public.
+                    {% elif page.status == 'review' %}
+                        and is awaiting review.
+                    {% elif page.status == 'archived' %}
+                        and has been archived.
+                    {% endif %}
+                </div>
+            {% endif %}
+        </header>
+
+        <!-- Page Excerpt -->
+        {% if page.excerpt %}
+            <div class="lead mb-4">
+                {{ page.excerpt }}
+            </div>
+        {% endif %}
+
+        <!-- Page Content -->
+        <div class="page-content">
+            {{ page.content_sanitized|safe }}
+        </div>
+
+        <!-- Version History (for authors) -->
+        {% if can_edit and versions %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history"></i> Recent Versions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for version in versions %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>Version {{ version.version_number }}</strong>
+                                        <small class="text-muted">
+                                            by {{ version.edited_by.get_display_name }}
+                                            on {{ version.created_at|date:"M d, Y g:i A" }}
+                                        </small>
+                                        {% if version.change_message %}
+                                            <br><small>{{ version.change_message }}</small>
+                                        {% endif %}
+                                    </div>
+                                    <a href="{% url 'cms:page_versions' slug=page.slug %}" 
+                                       class="btn btn-sm btn-outline-secondary">
+                                        View All
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Related Pages -->
+        {% if related_pages %}
+            <div class="mt-5">
+                <h3>Related Pages</h3>
+                <div class="row">
+                    {% for related in related_pages %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <a href="{% url 'cms:page_detail' slug=related.slug %}">
+                                            {{ related.title }}
+                                        </a>
+                                    </h5>
+                                    {% if related.excerpt %}
+                                        <p class="card-text text-muted">
+                                            {{ related.excerpt|truncatewords:20 }}
+                                        </p>
+                                    {% endif %}
+                                    <small class="text-muted">
+                                        {{ related.publish_at|date:"M d, Y" }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Comments Section (if enabled) -->
+        {% if page.allow_comments %}
+            <div class="mt-5">
+                <h3>Comments</h3>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Comments are coming soon!
+                </div>
+            </div>
+        {% endif %}
+    </article>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/main.js' %}"></script>
+<script src="{% static 'js/cms.js' %}"></script>
+<script>
+    // Share functionality
+    function shareOnTwitter() {
+        const url = encodeURIComponent(window.location.href);
+        const text = encodeURIComponent('{{ page.title }}');
+        window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank');
+    }
+    
+    function shareOnFacebook() {
+        const url = encodeURIComponent(window.location.href);
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+    }
+    
+    function shareOnLinkedIn() {
+        const url = encodeURIComponent(window.location.href);
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
+    }
+    
+    function copyLink() {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('Link copied to clipboard!');
+        });
+    }
+    
+    // Publish/Unpublish functionality
+    {% if can_edit %}
+        const publishBtn = document.getElementById('publish-btn');
+        const unpublishBtn = document.getElementById('unpublish-btn');
+        
+        if (publishBtn) {
+            publishBtn.addEventListener('click', async function() {
+                if (confirm('Are you sure you want to publish this page?')) {
+                    try {
+                        const response = await fetch('{% url "cms:page_publish" slug=page.slug %}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            location.reload();
+                        } else {
+                            alert('Failed to publish page');
+                        }
+                    } catch (error) {
+                        console.error('Publish error:', error);
+                    }
+                }
+            });
+        }
+        
+        if (unpublishBtn) {
+            unpublishBtn.addEventListener('click', async function() {
+                if (confirm('Are you sure you want to unpublish this page?')) {
+                    // Similar implementation for unpublish
+                    alert('Unpublish functionality to be implemented');
+                }
+            });
+        }
+    {% endif %}
+</script>
+{% endblock %}
