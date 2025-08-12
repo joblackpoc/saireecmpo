@@ -1,0 +1,58 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Restore Version{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>Restore Version {{ version.version_number }}</h1>
+    
+    <div class="module">
+        <h2>Warning</h2>
+        <p class="errornote">
+            You are about to restore the page "{{ page.title }}" to version {{ version.version_number }}.
+            The current version will be saved in the version history before restoration.
+        </p>
+    </div>
+    
+    <div class="module">
+        <h2>Version Details</h2>
+        <table>
+            <tbody>
+                <tr>
+                    <th>Version Number:</th>
+                    <td>{{ version.version_number }}</td>
+                </tr>
+                <tr>
+                    <th>Title:</th>
+                    <td>{{ version.title }}</td>
+                </tr>
+                <tr>
+                    <th>Edited By:</th>
+                    <td>{{ version.edited_by }}</td>
+                </tr>
+                <tr>
+                    <th>Date:</th>
+                    <td>{{ version.created_at|date:"Y-m-d H:i:s" }}</td>
+                </tr>
+                {% if version.change_message %}
+                <tr>
+                    <th>Change Message:</th>
+                    <td>{{ version.change_message }}</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="submit-row">
+            <input type="submit" value="Restore Version" class="default">
+            <a href="{% url 'admin:cms_page_versions' page.pk %}" class="button">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

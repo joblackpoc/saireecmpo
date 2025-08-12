@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Restore Version - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+<link rel="stylesheet" href="{% static 'css/cms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0">
+                        <i class="bi bi-arrow-counterclockwise"></i> Restore Page Version
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h5>Are you sure you want to restore this version?</h5>
+                        <p class="mb-0">The current version will be saved in history before restoring.</p>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <strong>Current Version (v{{ page.version }})</strong>
+                                </div>
+                                <div class="card-body">
+                                    <h5>{{ page.title }}</h5>
+                                    <small class="text-muted">
+                                        Last edited: {{ page.updated_at|date:"M d, Y g:i A" }}
+                                        {% if page.updated_by %}
+                                            by {{ page.updated_by.get_display_name }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <strong>Restore to Version {{ version.version_number }}</strong>
+                                </div>
+                                <div class="card-body">
+                                    <h5>{{ version.title }}</h5>
+                                    <small class="text-muted">
+                                        Edited: {{ version.created_at|date:"M d, Y g:i A" }}
+                                        by {{ version.edited_by.get_display_name }}
+                                    </small>
+                                    {% if version.change_message %}
+                                        <div class="mt-2">
+                                            <small class="text-info">
+                                                <i class="bi bi-chat-left-text"></i> {{ version.change_message }}
+                                            </small>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="restore-message" class="form-label">
+                                Reason for restoration (optional):
+                            </label>
+                            <textarea class="form-control" 
+                                      id="restore-message" 
+                                      name="restore_message" 
+                                      rows="3"
+                                      placeholder="Describe why you're restoring this version..."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="bi bi-arrow-counterclockwise"></i> 
+                                Restore to Version {{ version.version_number }}
+                            </button>
+                            
+                            <a href="{% url 'cms:page_versions' slug=page.slug %}" 
+                               class="btn btn-outline-secondary btn-lg">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

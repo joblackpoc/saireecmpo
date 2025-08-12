@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Version History: {{ page.title }} - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+<link rel="stylesheet" href="{% static 'css/cms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Version History</h1>
+        <a href="{% url 'cms:page_detail' slug=page.slug %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Page
+        </a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h4>{{ page.title }}</h4>
+            <p class="text-muted mb-0">
+                Current Version: <strong>v{{ page.version }}</strong>
+                • Total Versions: <strong>{{ versions.count }}</strong>
+            </p>
+        </div>
+    </div>
+
+    <!-- Version Comparison Tool -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-arrows-diff"></i> Compare Versions
+            </h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">Select two versions to compare changes</p>
+            <button class="btn btn-primary" id="compare-versions-btn" disabled>
+                <i class="bi bi-arrows-diff"></i> Compare Selected
+            </button>
+        </div>
+    </div>
+
+    <!-- Version List -->
+    <div class="version-list">
+        {% for version in versions %}
+            <div class="version-item {% if forloop.first %}current{% endif %}">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <input type="checkbox" 
+                               class="form-check-input version-compare" 
+                               value="{{ version.id }}"
+                               {% if forloop.first %}disabled{% endif %}>
+                    </div>
+                    <div class="col">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5>
+                                    Version {{ version.version_number }}
+                                    {% if forloop.first %}
+                                        <span class="badge bg-success">Current</span>
+                                    {% endif %}
+                                </h5>
+                                <p class="mb-1">
+                                    <strong>{{ version.title }}</strong>
+                                </p>
+                                <small class="text-muted">
+                                    <i class="bi bi-person"></i> {{ version.edited_by.get_display_name }}
+                                    • <i class="bi bi-clock"></i> {{ version.created_at|date:"M d, Y g:i A" }}
+                                    ({{ version.created_at|timesince }} ago)
+                                </small>
+                                {% if version.change_message %}
+                                    <div class="mt-2">
+                                        <small class="text-info">
+                                            <i class="bi bi-chat-left-text"></i> {{ version.change_message }}
+                                        </small>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                {% if not forloop.first %}
+                                    <a href="{% url 'cms:page_restore' slug=page.slug version_id=version.id %}" 
+                                       class="btn btn-sm btn-outline-warning">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                    </a>
+                                {% endif %}
+                                <button class="btn btn-sm btn-outline-info view-version" 
+                                        data-version-id="{{ version.id }}">
+                                    <i class="bi bi-eye"></i> View
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="version-number">v{{ version.version_number }}</div>
+            </div>
+        {% empty %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> No version history available yet.
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <div class="pagination-container">
+            <nav aria-label="Version history pagination">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                Previous
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                Next
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Version Diff Modal -->
+<div class="modal fade" id="version-diff-modal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Version Comparison</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="diff-content" class="version-diff"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Version View Modal -->
+<div class="modal fade" id="version-view-modal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Version Content</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="version-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/cms.js' %}"></script>
+<script>
+    // View version content
+    document.querySelectorAll('.view-version').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const versionId = this.dataset.versionId;
+            // Implementation for viewing version content
+            const modal = new bootstrap.Modal(document.getElementById('version-view-modal'));
+            modal.show();
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ category.name }} - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+<link rel="stylesheet" href="{% static 'css/cms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'cms:category_list' %}">Categories</a>
+                    </li>
+                    {% if category.parent %}
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'cms:category_detail' slug=category.parent.slug %}">
+                                {{ category.parent.name }}
+                            </a>
+                        </li>
+                    {% endif %}
+                    <li class="breadcrumb-item active">{{ category.name }}</li>
+                </ol>
+            </nav>
+            <h1 class="page-title">
+                <i class="bi bi-folder"></i> {{ category.name }}
+            </h1>
+            {% if category.description %}
+                <p class="lead">{{ category.description }}</p>
+            {% endif %}
+        </div>
+        {% if user.is_authenticated %}
+            <a href="{% url 'cms:page_create' %}?category={{ category.id }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> New Page in Category
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Subcategories -->
+    {% if category.children.exists %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-folder-symlink"></i> Subcategories
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for subcategory in category.children.all %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <a href="{% url 'cms:category_detail' slug=subcategory.slug %}">
+                                            {{ subcategory.name }}
+                                        </a>
+                                    </h6>
+                                    {% if subcategory.description %}
+                                        <p class="card-text small text-muted">
+                                            {{ subcategory.description|truncatewords:15 }}
+                                        </p>
+                                    {% endif %}
+                                    <p class="card-text">
+                                        <span class="badge bg-secondary">
+                                            {{ subcategory.pages.count }} pages
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Category Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-value">{{ pages.count }}</div>
+                <div class="stats-label">Total Pages</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-value text-success">{{ published_count }}</div>
+                <div class="stats-label">Published</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-value text-warning">{{ draft_count }}</div>
+                <div class="stats-label">Drafts</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-value text-info">{{ total_views }}</div>
+                <div class="stats-label">Total Views</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter and Sort -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All</option>
+                        <option value="published" {% if request.GET.status == 'published' %}selected{% endif %}>
+                            Published
+                        </option>
+                        <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>
+                            Draft
+                        </option>
+                        <option value="review" {% if request.GET.status == 'review' %}selected{% endif %}>
+                            Under Review
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Sort By</label>
+                    <select name="order" class="form-select">
+                        <option value="-publish_at">Newest First</option>
+                        <option value="publish_at" {% if request.GET.order == 'publish_at' %}selected{% endif %}>
+                            Oldest First
+                        </option>
+                        <option value="-view_count" {% if request.GET.order == '-view_count' %}selected{% endif %}>
+                            Most Viewed
+                        </option>
+                        <option value="title" {% if request.GET.order == 'title' %}selected{% endif %}>
+                            Title A-Z
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary d-block">
+                        <i class="bi bi-funnel"></i> Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pages in Category -->
+    <div class="page-list">
+        {% for page in pages %}
+            <div class="page-card {{ page.status }}">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h3 class="page-title">
+                            <a href="{% url 'cms:page_detail' slug=page.slug %}">
+                                {{ page.title }}
+                            </a>
+                            {% if page.featured %}
+                                <i class="bi bi-star-fill featured-icon"></i>
+                            {% endif %}
+                        </h3>
+                        
+                        {% if page.excerpt %}
+                            <p class="page-excerpt text-muted">{{ page.excerpt|truncatewords:30 }}</p>
+                        {% endif %}
+                        
+                        <div class="page-meta-inline">
+                            <span class="status-badge {{ page.status }}">{{ page.get_status_display }}</span>
+                            
+                            {% for tag in page.tags.all|slice:":5" %}
+                                <a href="{% url 'cms:tag_detail' slug=tag.slug %}" class="tag-badge">
+                                    {{ tag.name }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 text-end">
+                        <div class="page-meta-item">
+                            <i class="bi bi-person"></i>
+                            <span>{{ page.author.get_display_name }}</span>
+                        </div>
+                        <div class="page-meta-item">
+                            <i class="bi bi-calendar"></i>
+                            <span>{{ page.publish_at|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="page-meta-item">
+                            <i class="bi bi-eye"></i>
+                            <span>{{ page.view_count }} views</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="empty-state">
+                <i class="bi bi-folder-x"></i>
+                <h3>No Pages in This Category</h3>
+                <p>This category doesn't have any pages yet.</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'cms:page_create' %}?category={{ category.id }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Create First Page
+                    </a>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <div class="pagination-container">
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                Previous
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                Next
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/cms.js' %}"></script>
+{% endblock %}

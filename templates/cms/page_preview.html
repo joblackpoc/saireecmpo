@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Preview: {{ page.title }} - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+<link rel="stylesheet" href="{% static 'css/cms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Preview Warning Banner -->
+    <div class="preview-banner sticky-top">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-eye"></i>
+                <strong>PREVIEW MODE</strong> - This is how your page will look when published
+            </div>
+            <div>
+                <a href="{% url 'cms:page_edit' slug=page.slug %}" class="btn btn-sm btn-warning">
+                    <i class="bi bi-pencil"></i> Continue Editing
+                </a>
+                {% if page.status == 'draft' %}
+                    <button class="btn btn-sm btn-success" id="publish-from-preview">
+                        <i class="bi bi-send"></i> Publish Now
+                    </button>
+                {% endif %}
+                <button class="btn btn-sm btn-secondary" onclick="window.close()">
+                    <i class="bi bi-x"></i> Close Preview
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Preview Content -->
+    <article class="mt-4">
+        <header class="mb-4">
+            <h1 class="display-4">
+                {{ page.title }}
+                {% if page.featured %}
+                    <i class="bi bi-star-fill featured-icon"></i>
+                {% endif %}
+            </h1>
+            
+            <div class="page-meta">
+                <div class="page-meta-item">
+                    <i class="bi bi-person-fill"></i>
+                    By {{ page.author.get_display_name }}
+                </div>
+                <div class="page-meta-item">
+                    <i class="bi bi-calendar"></i>
+                    Will be published: {{ page.publish_at|date:"F j, Y" }}
+                </div>
+                {% if page.category %}
+                    <div class="page-meta-item">
+                        <i class="bi bi-folder"></i>
+                        {{ page.category.name }}
+                    </div>
+                {% endif %}
+            </div>
+        </header>
+
+        {% if page.excerpt %}
+            <div class="lead mb-4">
+                {{ page.excerpt }}
+            </div>
+        {% endif %}
+
+        <div class="page-content">
+            {{ page.content_sanitized|safe }}
+        </div>
+    </article>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/cms.js' %}"></script>
+<script>
+    {% if page.status == 'draft' %}
+    document.getElementById('publish-from-preview')?.addEventListener('click', async function() {
+        if (confirm('Publish this page now?')) {
+            try {
+                const response = await fetch('{% url "cms:page_publish" slug=page.slug %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                });
+                
+                if (response.ok) {
+                    window.location.href = '{% url "cms:page_detail" slug=page.slug %}';
+                }
+            } catch (error) {
+                console.error('Publish error:', error);
+            }
+        }
+    });
+    {% endif %}
+</script>
+{% endblock %}

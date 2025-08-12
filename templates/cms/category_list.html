@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Categories - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+<link rel="stylesheet" href="{% static 'css/cms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="page-title">Content Categories</h1>
+        {% if user.is_staff %}
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
+                <i class="bi bi-plus-circle"></i> New Category
+            </button>
+        {% endif %}
+    </div>
+
+    <!-- Category Tree -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-diagram-3"></i> Category Structure
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="category-tree">
+                        {% for category in categories %}
+                            {% if not category.parent %}
+                                <li>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <a href="{% url 'cms:category_detail' slug=category.slug %}">
+                                                <strong>{{ category.name }}</strong>
+                                            </a>
+                                            <span class="badge bg-secondary ms-2">
+                                                {{ category.pages.count }} pages
+                                            </span>
+                                            {% if not category.is_active %}
+                                                <span class="badge bg-danger ms-1">Inactive</span>
+                                            {% endif %}
+                                        </div>
+                                        {% if user.is_staff %}
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary edit-category" 
+                                                        data-category-id="{{ category.id }}">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger delete-category" 
+                                                        data-category-id="{{ category.id }}">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    {% if category.description %}
+                                        <small class="text-muted">{{ category.description|truncatewords:20 }}</small>
+                                    {% endif %}
+                                    
+                                    {% if category.children.exists %}
+                                        <ul>
+                                            {% for child in category.children.all %}
+                                                <li>
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <a href="{% url 'cms:category_detail' slug=child.slug %}">
+                                                                {{ child.name }}
+                                                            </a>
+                                                            <span class="badge bg-secondary ms-2">
+                                                                {{ child.pages.count }}
+                                                            </span>
+                                                        </div>
+                                                        {% if user.is_staff %}
+                                                            <div class="btn-group btn-group-sm">
+                                                                <button class="btn btn-outline-primary edit-category" 
+                                                                        data-category-id="{{ child.id }}">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </button>
+                                                                <button class="btn btn-outline-danger delete-category" 
+                                                                        data-category-id="{{ child.id }}">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    {% if child.description %}
+                                                        <small class="text-muted">{{ child.description|truncatewords:15 }}</small>
+                                                    {% endif %}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </li>
+                            {% endif %}
+                        {% empty %}
+                            <li class="text-muted">No categories created yet.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Statistics -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up"></i> Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="stats-card">
+                        <div class="stats-value">{{ categories.count }}</div>
+                        <div class="stats-label">Total Categories</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-value">{{ total_pages }}</div>
+                        <div class="stats-label">Categorized Pages</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Popular Categories -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-star"></i> Popular Categories
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for category in popular_categories %}
+                            <a href="{% url 'cms:category_detail' slug=category.slug %}" 
+                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                {{ category.name }}
+                                <span class="badge bg-primary rounded-pill">{{ category.page_count }}</span>
+                            </a>
+                        {% empty %}
+                            <p class="text-muted mb-0">No categories yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Category Modal -->
+{% if user.is_staff %}
+<div class="modal fade" id="createCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'cms:category_list' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="category-name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="category-name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category-slug" class="form-label">Slug</label>
+                        <input type="text" class="form-control" id="category-slug" name="slug">
+                        <small class="text-muted">Leave blank to auto-generate</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category-description" class="form-label">Description</label>
+                        <textarea class="form-control" id="category-description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category-parent" class="form-label">Parent Category</label>
+                        <select class="form-select" id="category-parent" name="parent">
+                            <option value="">None (Top Level)</option>
+                            {% for cat in categories %}
+                                {% if not cat.parent %}
+                                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/cms.js' %}"></script>
+{% endblock %}

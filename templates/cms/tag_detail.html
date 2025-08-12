@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tag: {{ tag.name }} - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+<link rel="stylesheet" href="{% static 'css/cms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="page-title">
+            <i class="bi bi-tag"></i> {{ tag.name }}
+        </h1>
+        <div>
+            <span class="badge bg-primary">{{ pages.count }} pages</span>
+        </div>
+    </div>
+
+    <!-- Pages with this tag -->
+    <div class="page-list">
+        {% for page in pages %}
+            <div class="page-card {{ page.status }}">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h3 class="page-title">
+                            <a href="{% url 'cms:page_detail' slug=page.slug %}">
+                                {{ page.title }}
+                            </a>
+                            {% if page.featured %}
+                                <i class="bi bi-star-fill featured-icon"></i>
+                            {% endif %}
+                        </h3>
+                        
+                        {% if page.excerpt %}
+                            <p class="page-excerpt text-muted">{{ page.excerpt|truncatewords:30 }}</p>
+                        {% endif %}
+                        
+                        <div class="page-meta-inline">
+                            <span class="status-badge {{ page.status }}">{{ page.get_status_display }}</span>
+                            
+                            {% if page.category %}
+                                <a href="{% url 'cms:category_detail' slug=page.category.slug %}" 
+                                   class="category-badge">
+                                    {{ page.category.name }}
+                                </a>
+                            {% endif %}
+                            
+                            {% for other_tag in page.tags.all %}
+                                {% if other_tag != tag %}
+                                    <a href="{% url 'cms:tag_detail' slug=other_tag.slug %}" class="tag-badge">
+                                        {{ other_tag.name }}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 text-end">
+                        <div class="page-meta-item">
+                            <i class="bi bi-person"></i>
+                            <span>{{ page.author.get_display_name }}</span>
+                        </div>
+                        <div class="page-meta-item">
+                            <i class="bi bi-calendar"></i>
+                            <span>{{ page.publish_at|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="page-meta-item">
+                            <i class="bi bi-eye"></i>
+                            <span>{{ page.view_count }} views</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="empty-state">
+                <i class="bi bi-tag"></i>
+                <h3>No Pages with This Tag</h3>
+                <p>No pages have been tagged with "{{ tag.name }}" yet.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <div class="pagination-container">
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                Previous
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                Next
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    {% endif %}
+
+    <!-- Related Tags -->
+    {% if related_tags %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-tags"></i> Related Tags
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for related_tag in related_tags %}
+                    <a href="{% url 'cms:tag_detail' slug=related_tag.slug %}" class="tag-badge">
+                        {{ related_tag.name }}
+                        <span class="badge bg-secondary ms-1">{{ related_tag.page_count }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/cms.js' %}"></script>
+{% endblock %}

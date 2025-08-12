@@ -4,11 +4,11 @@ from django.apps import AppConfig
 class CmsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'cms'
-    verbose_name = 'Content Management System'
+    verbose_name = 'CMS'
     
     def ready(self):
-        """Import signal handlers when app is ready."""
+        # Import signal handlers
         try:
-            from . import signals
+            import apps.cms.signals
         except ImportError:
             pass

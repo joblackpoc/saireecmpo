@@ -1,0 +1,102 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Version History: {{ page.title }}{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <style>
+        .version-list {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .version-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .version-item:last-child {
+            border-bottom: none;
+        }
+        .version-current {
+            background: #f0f8ff;
+        }
+        .version-meta {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .version-actions {
+            margin-top: 10px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>Version History: {{ page.title }}</h1>
+    
+    <div class="module">
+        <h2>Page Information</h2>
+        <table>
+            <tbody>
+                <tr>
+                    <th>Current Version:</th>
+                    <td>v{{ page.version }}</td>
+                </tr>
+                <tr>
+                    <th>Total Versions:</th>
+                    <td>{{ versions.count }}</td>
+                </tr>
+                <tr>
+                    <th>Created:</th>
+                    <td>{{ page.created_at|date:"Y-m-d H:i:s" }}</td>
+                </tr>
+                <tr>
+                    <th>Last Modified:</th>
+                    <td>{{ page.updated_at|date:"Y-m-d H:i:s" }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="version-list">
+        {% for version in versions %}
+            <div class="version-item {% if forloop.first %}version-current{% endif %}">
+                <h3>
+                    Version {{ version.version_number }}
+                    {% if forloop.first %}
+                        <span class="label label-success">(Current)</span>
+                    {% endif %}
+                </h3>
+                
+                <div class="version-meta">
+                    <strong>Title:</strong> {{ version.title }}<br>
+                    <strong>Edited by:</strong> {{ version.edited_by }}<br>
+                    <strong>Date:</strong> {{ version.created_at|date:"Y-m-d H:i:s" }}<br>
+                    {% if version.change_message %}
+                        <strong>Change:</strong> {{ version.change_message }}
+                    {% endif %}
+                </div>
+                
+                {% if not forloop.first %}
+                    <div class="version-actions">
+                        <a href="{% url 'admin:cms_page_restore' page.pk version.pk %}" 
+                           class="button">
+                            Restore This Version
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p>No version history available.</p>
+        {% endfor %}
+    </div>
+    
+    <div class="submit-row">
+        <a href="{% url 'admin:cms_page_change' page.pk %}" class="button default">
+            Back to Page
+        </a>
+    </div>
+</div>
+{% endblock %}

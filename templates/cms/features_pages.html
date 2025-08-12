@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Featured Pages - SecureCMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+<link rel="stylesheet" href="{% static 'css/cms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="featured-banner">
+        <h1 class="display-4 text-white mb-3">
+            <i class="bi bi-star-fill"></i> Featured Content
+        </h1>
+        <p class="lead text-white">
+            Discover our hand-picked selection of the best content
+        </p>
+    </div>
+
+    <!-- Featured Pages Grid -->
+    <div class="row mt-4">
+        {% for page in featured_pages %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm position-relative">
+                    <span class="featured-badge">
+                        <i class="bi bi-star-fill"></i> Featured
+                    </span>
+                    
+                    <div class="card-body">
+                        <h3 class="card-title">
+                            <a href="{% url 'cms:page_detail' slug=page.slug %}" class="stretched-link">
+                                {{ page.title }}
+                            </a>
+                        </h3>
+                        
+                        {% if page.excerpt %}
+                            <p class="card-text">{{ page.excerpt|truncatewords:25 }}</p>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div>
+                                {% if page.category %}
+                                    <span class="category-badge">
+                                        {{ page.category.name }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">
+                                <i class="bi bi-eye"></i> {{ page.view_count }} views
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer bg-light">
+                        <small class="text-muted">
+                            <i class="bi bi-person"></i> {{ page.author.get_display_name }}
+                            • <i class="bi bi-calendar"></i> {{ page.publish_at|date:"M d, Y" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="empty-state">
+                    <i class="bi bi-star"></i>
+                    <h3>No Featured Pages</h3>
+                    <p>No pages have been featured yet.</p>
+                    {% if user.is_staff %}
+                        <a href="{% url 'cms:page_list' %}" class="btn btn-primary">
+                            Browse Pages to Feature
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Load More -->
+    {% if has_more %}
+        <div class="text-center mt-4">
+            <button class="btn btn-outline-primary" id="load-more-btn">
+                <i class="bi bi-arrow-down-circle"></i> Load More
+            </button>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/cms.js' %}"></script>
+<script>
+    // Load more functionality
+    let currentPage = 1;
+    document.getElementById('load-more-btn')?.addEventListener('click', async function() {
+        currentPage++;
+        try {
+            const response = await fetch(`?page=${currentPage}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (response.ok) {
+                const html = await response.text();
+                // Append new content
+                console.log('Load more pages');
+            }
+        } catch (error) {
+            console.error('Load more error:', error);
+        }
+    });
+</script>
+{% endblock %}

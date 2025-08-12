@@ -69,12 +69,12 @@ INSTALLED_APPS = [
     'django_ckeditor_5',
     
     # Content Management
-    'ckeditor5',
+    #'ckeditor5',
     
     # Our apps
-    'apps.accounts',
-    'apps.cms',
-    #'apps.api',
+    'apps.accounts.apps.AccountsConfig',
+    'apps.cms.apps.CmsConfig',
+    'apps.api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
