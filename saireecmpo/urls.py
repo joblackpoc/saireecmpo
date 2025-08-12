@@ -43,10 +43,12 @@ urlpatterns = [
     path('', include(tf_urls)),
     
     # Admin with 2FA protection
-    path('admin/', admin.site.urls),
+    path('admin/', include('admin_honeypot.urls', namespace='admin')),
+    path('secure-admin/', admin.site.urls),
     path('ckeditor5/', include('django_ckeditor_5.urls')),
     # Honeypot field for bot detection (fake login URL)
-    path('accounts/login/', include('honeypot.urls')),
+    path('accounts/login/', include('admin_honeypot.urls', namespace='login')),
+    path('secure-login/', include('two_factor.urls', namespace='secure-login')),
     
     # Authentication URLs with rate limiting
     path('auth/', include('apps.accounts.urls', namespace='accounts')),

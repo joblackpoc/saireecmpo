@@ -44,6 +44,7 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 # Application definition
 
 INSTALLED_APPS = [
+    'admin_honeypot',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -72,9 +73,12 @@ INSTALLED_APPS = [
     #'ckeditor5',
     
     # Our apps
-    'apps.accounts.apps.AccountsConfig',
-    'apps.cms.apps.CmsConfig',
-    'apps.api.apps.ApiConfig',
+    # 'apps.accounts.apps.AccountsConfig',
+    # 'apps.cms.apps.CmsConfig',
+    # 'apps.api.apps.ApiConfig',
+    'accounts.apps.AccountsConfig',
+    'cms.apps.CmsConfig',
+    'api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
@@ -93,6 +97,7 @@ MIDDLEWARE = [
     'axes.middleware.AxesMiddleware',  # Brute force protection
     'defender.middleware.FailedLoginMiddleware',  # Login monitoring
     'csp.middleware.CSPMiddleware',  # Content Security Policy
+    'honeypot.middleware.HoneypotMiddleware',
     
 ]
 
